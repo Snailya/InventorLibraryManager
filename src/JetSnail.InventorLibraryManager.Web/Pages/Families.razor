@@ -1,0 +1,101 @@
+﻿@page "/families"
+@inject IGetLibrariesUseCase _getLibrariesUseCase
+@inject IGetFamiliesUseCase _getFamiliesUseCase
+
+<div style="height:100%; display: flex; flex-direction: column;">
+    <Row Justify="center" Align="middle" Gutter="8">
+        <GridCol Span="4">
+            <Select TItem="LibraryOptionViewModel" TItemValue="string" 
+                    DataSource="@_viewModel.Libraries"
+                    OnSelectedItemChanged="@FilterFamilies"
+                    LabelName="@nameof(LibraryOptionViewModel.Name)"
+                    ValueName="@nameof(LibraryOptionViewModel.Id)"
+                    GroupName="@nameof(LibraryOptionViewModel.ReadOnly)"
+            >
+            </Select>
+        </GridCol>
+        <GridCol Span="16">
+            @* <Search Placeholder="搜索" *@
+            @*         EnterButton="@("Search")" *@
+            @*         @bind-Value="@_viewModel.Field" *@
+            @*         OnSearch="ReloadFamiliesAsync"/> *@
+        </GridCol>
+    </Row>
+    <Row Justify="center" Style="flex-grow: 1">
+        <GridCol Span="20">
+            <Spin Size="large" Spinning="_isLoading" Style="display: flex; height: 100%; width: 100%; align-items: center; justify-content: center;">
+                <Table TItem="FamilyLineItemViewModel" DataSource="@_viewModel.FilteredFamilies">
+                    <Column @bind-Field="@context.Library" Sortable/>
+                    <Column @bind-Field="@context.Name"/>
+                    <Column @bind-Field="@context.Group" Sortable/>
+                    @* <ActionColumn Title="操作"> *@
+                    @*     <Space> *@
+                    @*         <SpaceItem> *@
+                    @*             <Button OnClick="() => ViewFamily(context.InternalName)" Disabled="@(context.Id == null)">详情</Button> *@
+                    @*         </SpaceItem> *@
+                    @*         <SpaceItem> *@
+                    @*             <Button OnClick="() => SaveFamilyTo(context.InternalName)">复制到</Button> *@
+                    @*         </SpaceItem> *@
+                    @*         <SpaceItem> *@
+                    @*             <Button OnClick="() => DeleteFamily(context)" Disabled="@(context.Id == null)" Danger>删除</Button> *@
+                    @*         </SpaceItem> *@
+                    @*     </Space> *@
+                    @* </ActionColumn> *@
+                </Table>
+            </Spin>
+        </GridCol>
+    </Row>
+</div>
+
+@code {
+
+    /// <summary>
+    ///     Indicates whether the table is loading.
+    /// </summary>
+    private bool _isLoading;
+
+    /// <summary>
+    ///     ViewModel of the page.
+    /// </summary>
+    private readonly FamilyPageViewModel _viewModel = new();
+
+    /// <summary>
+    ///     Initialize ViewModel.
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+
+        _viewModel.Libraries = (await _getLibrariesUseCase.Execute())
+            .Select(x => new LibraryOptionViewModel
+        {
+            Id = x.LibraryInternalName,
+            Name = x.DisplayName,
+            ReadOnly = x.ReadOnly
+        }).ToList();
+
+        _viewModel.Families = (await _getFamiliesUseCase.Execute())
+            .Select(x => new FamilyLineItemViewModel()
+            {
+                DatabaseId = x.Id,
+                Group = x.Group!=null? new GroupLineItemViewModel()
+                {
+                    DisplayName = x.Group.DisplayName,
+                    Id = x.Group.Id,
+                    ShortName = x.Group.ShortName
+                }:null,
+                Id = x.FamilyInternalName,
+                Library = _viewModel.Libraries.Single(y=>y.Id == x.LibraryInternalName)
+            }).ToList();
+        
+        await base.OnInitializedAsync();
+    }
+
+    /// <summary>
+    ///     filter families by library
+    /// </summary>
+    private  void FilterFamilies(LibraryOptionViewModel obj)
+    {
+        _viewModel.FilteredFamilies = _viewModel.Families.Where(x => x.Library == obj);
+    }
+
+}

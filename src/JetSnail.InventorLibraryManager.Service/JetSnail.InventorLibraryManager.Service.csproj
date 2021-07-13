@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="Autodesk.Inventor.Interop, Version=26.0.0.0, Culture=neutral, PublicKeyToken=d84147f8b4276564">
+            <HintPath>C:\Program Files\Autodesk\Inventor 2022\Bin\Public Assemblies\Autodesk.Inventor.Interop.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\JetSnail.InventorLibraryManager.Data\JetSnail.InventorLibraryManager.Data.csproj"/>
+        <ProjectReference Include="..\JetSnail.InventorLibraryManager.UseCase\JetSnail.InventorLibraryManager.UseCase.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Remove="InventorService.cs"/>
+    </ItemGroup>
+
+</Project>

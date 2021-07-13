@@ -1,0 +1,24 @@
+﻿@inherits LayoutComponentBase
+
+<div id="react-content">
+    <MainHeader/>
+    <div class="main-wrapper">
+        <CascadingValue Value="this">
+            @Body
+        </CascadingValue>
+    </div>
+</div>
+
+<style>
+    #react-content {
+        height: 100%;
+        transition: transform .3s cubic-bezier(.78,.14,.15,.86);
+    }
+
+    .main-wrapper {
+        height: 100%;
+        position: relative;
+        padding: 40px 64px;
+        background: #fff;
+    }
+</style>

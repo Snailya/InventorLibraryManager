@@ -1,0 +1,111 @@
+﻿@page "/groups"
+@inject IGetGroupsUseCase _getGroupsUseCase
+@inject IAddGroupUseCase _addGroupUseCase
+@inject IDeleteGroupUseCase _deleteGroupUseCase
+@inject MessageService _message
+
+<Form @ref="_viewModel.Form"
+      Model="@_viewModel.GroupToAdd"
+      Layout="@FormLayout.Inline"
+      OnFinish="OnValidateSubmit"
+      >
+    <Validator>
+        <FluentValidator/>
+    </Validator>
+    <ChildContent>
+        <FormItem Label="名称">
+            <Input @bind-Value="@context.DisplayName"/>
+        </FormItem>
+        <FormItem Label="缩写">
+            <Input @bind-Value="@context.ShortName"/>
+        </FormItem>
+        <FormItem>
+            <Button Type="@ButtonType.Primary" HtmlType="submit">新建</Button>
+        </FormItem>
+    </ChildContent>
+</Form>
+<Spin Spinning="_isLoading">
+    <Table TItem="GroupLineItemViewModel" DataSource="@_viewModel.Groups">
+        <Column @bind-Field="@context.DisplayName"/>
+        <Column @bind-Field="@context.ShortName"/>
+        <ActionColumn Title="操作">
+            <Space>
+                @* <SpaceItem> *@
+                @*     <Button OnClick="() => UpdateGroupPartNumbers(context)" Disabled="@(context.IsSynchronized)">更新</Button> *@
+                @* </SpaceItem> *@
+                @* <SpaceItem> *@
+                @*     <Button OnClick="() => EditGroup(context)">编辑</Button> *@
+                @* </SpaceItem> *@
+                <SpaceItem>
+                    <Button OnClick="() => DeleteGroup(context)" Danger>删除</Button>
+                </SpaceItem>
+            </Space>
+        </ActionColumn>
+    </Table>
+</Spin>
+
+@code {
+
+    /// <summary>
+    ///     Indicates whether the table is loading.
+    /// </summary>
+    private bool _isLoading;
+
+    /// <summary>
+    ///     ViewModel of the component.
+    /// </summary>
+    private readonly GroupPageViewModel _viewModel = new();
+
+    /// <summary>
+    ///     Initialize ViewModel.
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        _isLoading = true;
+        await base.OnInitializedAsync();
+
+        _viewModel.Groups = (await _getGroupsUseCase.Execute())?.Select(x =>
+            new GroupLineItemViewModel
+            {
+                Id = x.Id ?? default(int),
+                DisplayName = x.DisplayName,
+                ShortName = x.ShortName
+            })
+            .ToList();
+
+        _isLoading = false;
+    }
+
+    /// <summary>
+    ///     Add group to database and update UI.
+    /// </summary>
+    private async Task OnValidateSubmit(EditContext editContext)
+    {
+        var vm = (GroupLineItemViewModel)editContext.Model;
+        var group = await _addGroupUseCase.Execute(vm.DisplayName, vm.ShortName);
+
+        await _message.Success("创建成功");
+        _viewModel.Groups.Add(new GroupLineItemViewModel { Id = group.Id, DisplayName = group.DisplayName, ShortName = group.ShortName });
+    }
+    
+
+    /// <summary>
+    ///     Delete group from database and update UI.
+    /// </summary>
+    private async Task DeleteGroup(GroupLineItemViewModel context)
+    {
+        if (context.Id != null)
+        {
+            if (await _deleteGroupUseCase.Execute((int)context.Id))
+            {
+                _isLoading = true;
+                StateHasChanged();
+                _viewModel.Groups.Remove(context);
+
+                _isLoading = false;
+                await _message.Success("删除成功");
+            }
+        }
+    }
+
+}

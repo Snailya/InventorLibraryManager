@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <AssemblyName>JetSnail.InventorLibraryManager.Service.WebAPI</AssemblyName>
+        <RootNamespace>JetSnail.InventorLibraryManager.Service.WebAPI</RootNamespace>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <DocumentationFile>D:\Documents\repos\InventorLibraryManager\src\JetSnail.InventorLibraryManager.Service.WebAPI\JetSnail.InventorLibraryManager.Service.WebAPI.xml</DocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.7">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\JetSnail.InventorLibraryManager.Core\JetSnail.InventorLibraryManager.Core.csproj"/>
+        <ProjectReference Include="..\JetSnail.InventorLibraryManager.Data\JetSnail.InventorLibraryManager.Data.csproj"/>
+        <ProjectReference Include="..\JetSnail.InventorLibraryManager.Service\JetSnail.InventorLibraryManager.Service.csproj"/>
+        <ProjectReference Include="..\JetSnail.InventorLibraryManager.UseCase\JetSnail.InventorLibraryManager.UseCase.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="JetSnail.InventorLibraryManager.Service.WebAPI.xml">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+</Project>
