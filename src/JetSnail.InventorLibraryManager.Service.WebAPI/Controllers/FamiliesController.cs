@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using JetSnail.InventorLibraryManager.Core.DbModels;
 using JetSnail.InventorLibraryManager.Core.DTOs;
 using JetSnail.InventorLibraryManager.UseCase.DataStores;
 using Microsoft.AspNetCore.Http;
@@ -18,19 +17,14 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
     public class FamiliesController : ControllerBase
     {
         private readonly IFamilyRepository _familyRepository;
-        private readonly IGroupRepository _groupRepository;
-        private readonly ILibraryRepository _libraryRepository;
         private readonly ILogger<FamiliesController> _logger;
 
         /// <inheritdoc />
-        public FamiliesController(ILogger<FamiliesController> logger, ILibraryRepository libraryRepository,
-            IFamilyRepository familyRepository,
-            IGroupRepository groupRepository)
+        public FamiliesController(ILogger<FamiliesController> logger,
+            IFamilyRepository familyRepository)
         {
             _logger = logger;
-            _libraryRepository = libraryRepository;
             _familyRepository = familyRepository;
-            _groupRepository = groupRepository;
         }
 
         /// <summary>
@@ -42,17 +36,18 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult> GetAsync()
+        public async Task<ActionResult> GetAsync([FromQuery] string libraryId)
         {
             try
             {
-                var families = (await _familyRepository.GetAllAsync()).ToArray();
+                var families = (await _familyRepository.GetAllAsync(libraryId)).ToArray();
 
                 if (!families.Any()) return Ok(Array.Empty<object>());
 
                 return Ok(families.Select(x => new FamilyDto
                 {
                     DisplayName = x.InventorModel.DisplayName,
+                    Description = x.InventorModel.Description,
                     FamilyInternalName = x.InventorModel.InternalName,
                     Group = x.DatabaseModel != null
                         ? new GroupDto
@@ -71,7 +66,7 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
                 return e.HResult switch
                 {
                     -2147221021 => StatusCode(500, "Unable to get Inventor from ROT."), // Inventor没有启动
-                    _ => UnprocessableEntity()
+                    _ => UnprocessableEntity(e.Message)
                 };
             }
         }
@@ -100,6 +95,7 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
                 return Ok(new FamilyDto
                 {
                     DisplayName = family.InventorModel.DisplayName,
+                    Description = family.InventorModel.Description,
                     FamilyInternalName = family.InventorModel.InternalName,
                     Group = family.DatabaseModel != null
                         ? new GroupDto
@@ -118,7 +114,7 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
                 return e.HResult switch
                 {
                     -2147221021 => StatusCode(500, "Unable to get Inventor from ROT."), // Inventor没有启动
-                    _ => UnprocessableEntity()
+                    _ => UnprocessableEntity(e.Message)
                 };
             }
         }
@@ -126,7 +122,7 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
         /// <summary>
         ///     将族从标准库中复制到自定义库，或从自定义库移动至新的自定义库。
         ///     复制或移动族不会存储族的Group信息，因而也不会更新族零件的PARTNUMBER。
-        ///     需要手动调用<see cref="UpdateAsync" />方法和<see cref="UpdateFamilyPartNumbersAsync" />方法更新。
+        ///     需要手动调用<see cref="UpdateGroupAsync" />方法和<see cref="UpdateFamilyPartNumbersAsync" />方法更新。
         /// </summary>
         /// <param name="dto">
         ///     <see cref="CopyOrMoveFamilyDto" />
@@ -144,18 +140,34 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
         {
             try
             {
-                var family = await _familyRepository.MoveAsync(dto.FamilyInternalName, dto.FromLibraryInternalName,
+                var family = await _familyRepository.CopyOrMoveAsync(dto.FamilyInternalName,
+                    dto.FromLibraryInternalName,
                     dto.ToLibraryInternalName, dto.Associative);
 
-                return AcceptedAtRoute(nameof(GetFamilyByIdAsync), new { id = family.InventorModel.InternalName });
+                return AcceptedAtRoute(nameof(GetFamilyByIdAsync), new { id = family.InventorModel.InternalName },
+                    new FamilyDto
+                    {
+                        DisplayName = family.InventorModel.DisplayName,
+                        Description = family.InventorModel.Description,
+                        FamilyInternalName = family.InventorModel.InternalName,
+                        Group = family.DatabaseModel != null
+                            ? new GroupDto
+                            {
+                                DisplayName = family.DatabaseModel?.Group?.DisplayName,
+                                Id = family.DatabaseModel?.Group?.Id,
+                                ShortName = family.DatabaseModel?.Group?.ShortName
+                            }
+                            : null,
+                        Id = family.DatabaseModel?.Id,
+                        LibraryInternalName = family.InventorModel.Library
+                    });
             }
             catch (Exception e)
             {
                 return e.HResult switch
                 {
-                    -2146233079 => UnprocessableEntity(e.Message),
                     -2147221021 => StatusCode(500, "Unable to get Inventor from ROT."),
-                    _ => UnprocessableEntity()
+                    _ => UnprocessableEntity(e.Message)
                 };
             }
         }
@@ -164,50 +176,26 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
         ///     更新族的分组信息。
         ///     更新族的分组信息并不会更新族零件的PARTNUMBER，需要手动调用<see cref="UpdateFamilyPartNumbersAsync" />方法更新。
         /// </summary>
-        /// <param name="dto">
-        ///     <see cref="UpdateFamilyDto" />
-        /// </param>
+        /// <param name="id"></param>
+        /// <param name="groupId"></param>
+        /// <param name="libraryId"></param>
         /// <returns>
         ///     <see cref="FamilyDto" />
         /// </returns>
-        [HttpPatch]
+        [HttpPatch("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-        public async Task<IActionResult> UpdateAsync([FromBody] UpdateFamilyDto dto)
+        public async Task<IActionResult> UpdateGroupAsync(string id, [FromBody] int groupId,
+            [FromQuery] string libraryId = null)
         {
             // todo: start here to test
             try
             {
-                if (dto.GroupId == null) return UnprocessableEntity();
-                var group = await _groupRepository.GetByIdAsync((int)dto.GroupId);
-                if (group.DatabaseModel == null)
-                    return UnprocessableEntity("Group not exist.");
+                await _familyRepository.UpdateAsync(id, libraryId, groupId);
 
-                var family = await _familyRepository.GetByIdAsync(dto.FamilyInternalName);
-
-                // if this family is never added to the Database, means it's either a read-only library which can't perform update action or user didn't follow the correct workflow to create it in custom library
-                if (family.DatabaseModel == null)
-                {
-                    var library = await _libraryRepository.GetByIdAsync(family.InventorModel.Library);
-
-                    // not-allowed action
-                    if (library.InventorModel.ReadOnly)
-                        return UnprocessableEntity("Edit action in a read-only library is not allowed.");
-
-                    // user not follow correct workflow
-                    family.DatabaseModel = new DatabaseFamily
-                    {
-                        InternalName = dto.FamilyInternalName
-                    };
-                }
-
-                family.DatabaseModel.Group = group.DatabaseModel;
-
-                await _familyRepository.UpdateAsync(family);
-
-                return Ok(await GetFamilyByIdAsync(dto.FamilyInternalName));
+                return await GetFamilyByIdAsync(id, libraryId);
             }
             catch (Exception e)
             {
@@ -215,7 +203,7 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
                 {
                     -2147024809 => NotFound(),
                     -2147221021 => StatusCode(500, "Unable to get Inventor from ROT."),
-                    _ => UnprocessableEntity()
+                    _ => UnprocessableEntity(e.Message)
                 };
             }
         }
@@ -227,17 +215,18 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
         ///     <see cref="UpdatePartNumberByIdAsync" />更新Inventor模型中的PARTNUMBER。
         /// </summary>
         /// <param name="id">族在Inventor中的标识符，GUID字符串</param>
+        /// <param name="libraryId">族所属的Inventor库的标识符，GUID字符串</param>
         /// <returns>A list of <see cref="PartDto" />.</returns>
         [HttpGet("{id}/parts", Name = nameof(GetFamilyPartNumbersAsync))]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetFamilyPartNumbersAsync(string id)
+        public async Task<IActionResult> GetFamilyPartNumbersAsync(string id, [FromQuery] string libraryId = null)
         {
             try
             {
-                var family = await _familyRepository.GetByIdAsync(id);
+                var family = await _familyRepository.GetByIdAsync(id, libraryId);
                 var parts = await _familyRepository.GetPartNumbers(family);
 
                 return Ok(parts.Select(x => new PartDto
@@ -256,8 +245,7 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
                 {
                     -2147024809 => NotFound(),
                     -2147221021 => StatusCode(500, "Unable to get Inventor from ROT."),
-                    -2147467259 => UnprocessableEntity($"Parameter {nameof(id)} property must be Guid string."),
-                    _ => UnprocessableEntity()
+                    _ => UnprocessableEntity(e.Message)
                 };
             }
         }
@@ -267,17 +255,18 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
         ///     执行该操作会检查族表是否包含名为AE_PARTNUMBER的列，若不存在，创建该列，并将数据库信息中的PARTNUMBER值写入如该列。
         /// </summary>
         /// <param name="id"></param>
+        /// <param name="libraryId"></param>
         /// <returns></returns>
-        [HttpPatch("{id}/parts", Name = nameof(UpdateFamilyPartNumbersAsync))]
+        [HttpPut("{id}/parts", Name = nameof(UpdateFamilyPartNumbersAsync))]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UpdateFamilyPartNumbersAsync(string id)
+        public async Task<IActionResult> UpdateFamilyPartNumbersAsync(string id, [FromQuery] string libraryId = null)
         {
             try
             {
-                var family = await _familyRepository.GetByIdAsync(id);
+                var family = await _familyRepository.GetByIdAsync(id, libraryId);
                 var parts = await _familyRepository.UpdatePartNumbers(family);
 
                 return Ok(parts.Select(x => new PartDto
@@ -297,7 +286,7 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
                     -2147024809 => NotFound(),
                     -2147221021 => StatusCode(500, "Unable to get Inventor from ROT."),
                     -2147467259 => UnprocessableEntity($"Parameter {nameof(id)} property must be Guid string."),
-                    _ => UnprocessableEntity()
+                    _ => UnprocessableEntity(e.Message)
                 };
             }
         }
@@ -308,17 +297,19 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
         /// </summary>
         /// <param name="familyId"></param>
         /// <param name="partId"></param>
+        /// <param name="libraryId"></param>
         /// <returns></returns>
-        [HttpPatch("{familyId}/parts/{partId}", Name = nameof(UpdatePartNumberByIdAsync))]
+        [HttpPut("{familyId}/parts/{partId}", Name = nameof(UpdatePartNumberByIdAsync))]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UpdatePartNumberByIdAsync(string familyId, string partId)
+        public async Task<IActionResult> UpdatePartNumberByIdAsync(string familyId, string partId,
+            [FromQuery] string libraryId = null)
         {
             try
             {
-                var family = await _familyRepository.GetByIdAsync(familyId);
+                var family = await _familyRepository.GetByIdAsync(familyId, libraryId);
                 var part = await _familyRepository.UpdatePartNumber(family, partId);
 
                 return Ok(new PartDto
@@ -326,7 +317,9 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
                     InventorFileName = part.InventorModel.Cells.SingleOrDefault(c => c.ColumnId == "FILENAME")?.Text,
                     Id = part.DatabaseModel.Id,
                     PartInternalName = part.InventorModel.InternalName,
-                    InventorPartNumber = part.DatabaseModel.PartNumber
+                    InventorPartNumber = part.InventorModel.Cells.SingleOrDefault(c => c.ColumnId == "AE_PARTNUMBER")
+                        ?.Text,
+                    DatabasePartNumber = part.DatabaseModel.PartNumber
                 });
             }
             catch (Exception e)
@@ -335,7 +328,7 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
                 {
                     -2147024809 => NotFound(),
                     -2147221021 => StatusCode(500, "Unable to get Inventor from ROT."),
-                    _ => UnprocessableEntity()
+                    _ => UnprocessableEntity(e.Message)
                 };
             }
         }

@@ -7,10 +7,10 @@
         <member name="T:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController">
             <inheritdoc />
         </member>
-        <member name="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.#ctor(Microsoft.Extensions.Logging.ILogger{JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController},JetSnail.InventorLibraryManager.UseCase.DataStores.ILibraryRepository,JetSnail.InventorLibraryManager.UseCase.DataStores.IFamilyRepository,JetSnail.InventorLibraryManager.UseCase.DataStores.IGroupRepository)">
+        <member name="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.#ctor(Microsoft.Extensions.Logging.ILogger{JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController},JetSnail.InventorLibraryManager.UseCase.DataStores.IFamilyRepository)">
             <inheritdoc />
         </member>
-        <member name="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.GetAsync">
+        <member name="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.GetAsync(System.String)">
             <summary>
                 获取当前Inventor中加载的族信息。
                 族信息由Inventor模型信息和数据库模型信息两部分构成。
@@ -31,7 +31,7 @@
             <summary>
                 将族从标准库中复制到自定义库，或从自定义库移动至新的自定义库。
                 复制或移动族不会存储族的Group信息，因而也不会更新族零件的PARTNUMBER。
-                需要手动调用<see cref="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.UpdateAsync(JetSnail.InventorLibraryManager.Core.DTOs.UpdateFamilyDto)" />方法和<see cref="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.UpdateFamilyPartNumbersAsync(System.String)" />方法更新。
+                需要手动调用<see cref="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.UpdateGroupAsync(System.String,System.Int32,System.String)" />方法和<see cref="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.UpdateFamilyPartNumbersAsync(System.String,System.String)" />方法更新。
             </summary>
             <param name="dto">
                 <see cref="T:JetSnail.InventorLibraryManager.Core.DTOs.CopyOrMoveFamilyDto" />
@@ -40,43 +40,46 @@
                 <see cref="T:JetSnail.InventorLibraryManager.Core.DTOs.FamilyDto" />
             </returns>
         </member>
-        <member name="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.UpdateAsync(JetSnail.InventorLibraryManager.Core.DTOs.UpdateFamilyDto)">
+        <member name="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.UpdateGroupAsync(System.String,System.Int32,System.String)">
             <summary>
                 更新族的分组信息。
-                更新族的分组信息并不会更新族零件的PARTNUMBER，需要手动调用<see cref="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.UpdateFamilyPartNumbersAsync(System.String)" />方法更新。
+                更新族的分组信息并不会更新族零件的PARTNUMBER，需要手动调用<see cref="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.UpdateFamilyPartNumbersAsync(System.String,System.String)" />方法更新。
             </summary>
-            <param name="dto">
-                <see cref="T:JetSnail.InventorLibraryManager.Core.DTOs.UpdateFamilyDto" />
-            </param>
+            <param name="id"></param>
+            <param name="groupId"></param>
+            <param name="libraryId"></param>
             <returns>
                 <see cref="T:JetSnail.InventorLibraryManager.Core.DTOs.FamilyDto" />
             </returns>
         </member>
-        <member name="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.GetFamilyPartNumbersAsync(System.String)">
+        <member name="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.GetFamilyPartNumbersAsync(System.String,System.String)">
             <summary>
                 获取指定族的零件信息。
-                零件信息由Inventor模型信息和数据库模型信息两部分构成。注意Inventor信息中和数据库信息中的PARTNUMBER可能不一致，可以使用<see cref="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.UpdateFamilyPartNumbersAsync(System.String)" />
+                零件信息由Inventor模型信息和数据库模型信息两部分构成。注意Inventor信息中和数据库信息中的PARTNUMBER可能不一致，可以使用<see cref="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.UpdateFamilyPartNumbersAsync(System.String,System.String)" />
                 或
-                <see cref="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.UpdatePartNumberByIdAsync(System.String,System.String)" />更新Inventor模型中的PARTNUMBER。
+                <see cref="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.UpdatePartNumberByIdAsync(System.String,System.String,System.String)" />更新Inventor模型中的PARTNUMBER。
             </summary>
             <param name="id">族在Inventor中的标识符，GUID字符串</param>
+            <param name="libraryId">族所属的Inventor库的标识符，GUID字符串</param>
             <returns>A list of <see cref="T:JetSnail.InventorLibraryManager.Core.DTOs.PartDto" />.</returns>
         </member>
-        <member name="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.UpdateFamilyPartNumbersAsync(System.String)">
+        <member name="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.UpdateFamilyPartNumbersAsync(System.String,System.String)">
             <summary>
                 更新族零件的PARTNUMBER，要求族的Group不为空。
                 执行该操作会检查族表是否包含名为AE_PARTNUMBER的列，若不存在，创建该列，并将数据库信息中的PARTNUMBER值写入如该列。
             </summary>
             <param name="id"></param>
+            <param name="libraryId"></param>
             <returns></returns>
         </member>
-        <member name="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.UpdatePartNumberByIdAsync(System.String,System.String)">
+        <member name="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.FamiliesController.UpdatePartNumberByIdAsync(System.String,System.String,System.String)">
             <summary>
                 更新指定族零件的PARTNUMBER，要求族的Group不为空。
                 执行该操作会检查族表是否包含名为AE_PARTNUMBER的列，若不存在，创建该列，并将数据库信息中的PARTNUMBER值写入如该列。
             </summary>
             <param name="familyId"></param>
             <param name="partId"></param>
+            <param name="libraryId"></param>
             <returns></returns>
         </member>
         <member name="M:JetSnail.InventorLibraryManager.Service.WebAPI.Controllers.GroupsController.GetAsync">

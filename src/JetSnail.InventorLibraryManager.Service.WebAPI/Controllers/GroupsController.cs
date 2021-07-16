@@ -78,7 +78,12 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
                         ShortName = dto.ShortName
                     }
                 });
-                return CreatedAtRoute(nameof(GetGroupByIdAsync), new { id = group.DatabaseModel.Id }, group);
+                return CreatedAtRoute(nameof(GetGroupByIdAsync), new { id = group.DatabaseModel.Id },
+                    new GroupDto
+                    {
+                        DisplayName = group.DatabaseModel.DisplayName, Id = group.DatabaseModel.Id,
+                        ShortName = group.DatabaseModel.ShortName
+                    });
             }
             catch (DbUpdateException dbUpdateException)
             {

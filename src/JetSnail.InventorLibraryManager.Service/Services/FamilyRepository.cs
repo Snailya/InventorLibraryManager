@@ -16,15 +16,17 @@ namespace JetSnail.InventorLibraryManager.Service.Services
     public class FamilyRepository : IFamilyRepository
     {
         private readonly ContentCenterContext _context;
+        private readonly IGroupRepository _groupRepository;
         private readonly ILibraryRepository _libraryRepository;
         private readonly ILogger<FamilyRepository> _logger;
 
         public FamilyRepository(ILogger<FamilyRepository> logger, ContentCenterContext context,
-            ILibraryRepository libraryRepository)
+            ILibraryRepository libraryRepository, IGroupRepository groupRepository)
         {
             _logger = logger;
             _context = context;
             _libraryRepository = libraryRepository;
+            _groupRepository = groupRepository;
         }
 
         public Task<IEnumerable<Family>> GetAllAsync(string libraryId)
@@ -57,52 +59,36 @@ namespace JetSnail.InventorLibraryManager.Service.Services
             return (await GetAllAsync(libraryId)).SingleOrDefault(x => x.InventorModel.InternalName == id);
         }
 
-        public async Task UpdateAsync(Family obj)
+        public async Task<Family> CopyOrMoveAsync(string id, string fromLibraryId, string toLibraryId, bool associative)
         {
-            // bug: unable to modify family property through FamilyManger.EditFamily, always return 0x80004005 Unspecified error
-            var app = InventorHelper.GetAppReference();
-            app.ContentCenter.ForceRefreshCache();
-
-            // check if this is in readonly library
-            var library = await _libraryRepository.GetByIdAsync(obj.InventorModel.Library);
-            if (library.InventorModel.ReadOnly)
-                throw new InvalidOperationException("Edit action in a read-only library is not allowed.");
-
-            // app.ContentCenter.FamilyManager.EditFamily(obj.InventorModel.InternalName, obj.InventorModel.Library,
-            //     obj.InventorModel.ToXml());
-
-            _context.Families.Update(obj.DatabaseModel);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task<Family> MoveAsync(string id, string fromLibraryId, string toLibraryId, bool associative)
-        {
-            var app = InventorHelper.GetAppReference();
-            app.ContentCenter.ForceRefreshCache();
-
             // because CopyFamily method would hack the readonly 
             // check if this is in readonly library
-            var library = await _libraryRepository.GetByIdAsync(toLibraryId);
-            if (library.InventorModel.ReadOnly)
+            var toLibrary = await _libraryRepository.GetByIdAsync(toLibraryId);
+            if (toLibrary.InventorModel == null)
+                throw new InvalidOperationException(
+                    "Can't find the target library.");
+            if (toLibrary.InventorModel.ReadOnly)
                 throw new InvalidOperationException("Copy or move family into a read-only library is not allowed.");
 
             // because CopyFamily method could hack even the from library or to library not loaded
-            // check if the both libraries are loade
+            // check if the both libraries are loaded
             var family = await GetByIdAsync(id, fromLibraryId);
             if (family == null)
                 throw new InvalidOperationException(
                     "Can't find family in the library.");
 
-            var toLibrary = await _libraryRepository.GetByIdAsync(toLibraryId);
-            if (toLibrary == null)
-                throw new InvalidOperationException(
-                    "Can't find the target library.");
+            var app = InventorHelper.GetAppReference();
+            app.ContentCenter.ForceRefreshCache();
 
-            app.ContentCenter.FamilyManager.CopyFamily(id, fromLibraryId,
-                toLibraryId,
-                associative);
+            app.ContentCenter.FamilyManager.CopyFamily(id, family.InventorModel.Library,
+                toLibraryId);
+            // app.ContentCenter.FamilyManager.PublishFamily(app.ContentCenter.FamilyManager.GetFamily(id, toLibraryId),toLibraryId);
 
-            family = await GetByIdAsync(id, fromLibraryId);
+            // if the origin library is not read-only, delete origin family from Inventor
+            var fromLibrary = await _libraryRepository.GetByIdAsync(fromLibraryId);
+            if (!fromLibrary.InventorModel.ReadOnly) app.ContentCenter.FamilyManager.DeleteFamily(id, fromLibraryId);
+
+            family = await GetByIdAsync(id, toLibraryId);
             if (family.DatabaseModel != null) return family;
 
             family.DatabaseModel = new DatabaseFamily
@@ -238,6 +224,36 @@ namespace JetSnail.InventorLibraryManager.Service.Services
                     .SingleOrDefault(e => e.InternalName == x.InternalName),
                 InventorModel = x
             }));
+        }
+
+        public async Task UpdateAsync(string familyId, string libraryId, int groupId)
+        {
+            var group = await _groupRepository.GetByIdAsync(groupId);
+            if (group.DatabaseModel == null)
+                throw new InvalidOperationException("Group not exist.");
+
+            var family = await GetByIdAsync(familyId, libraryId);
+            if (family.InventorModel == null)
+                throw new InvalidOperationException("Family not found.");
+
+            var library = await _libraryRepository.GetByIdAsync(family.InventorModel.Library);
+            if (library.InventorModel.ReadOnly)
+                throw new InvalidOperationException("Update action in a read-only library is not allowed.");
+
+            // if the user not follow the desire workflow, which means the family is in read/write library, but no record is in database
+            family.DatabaseModel ??= new DatabaseFamily
+            {
+                InternalName = familyId
+            };
+
+            family.DatabaseModel.Group = group.DatabaseModel;
+
+            // bug: unable to modify family property through FamilyManger.EditFamily, always return 0x80004005 Unspecified error
+            var app = InventorHelper.GetAppReference();
+            app.ContentCenter.ForceRefreshCache();
+
+            _context.Families.Update(family.DatabaseModel);
+            await _context.SaveChangesAsync();
         }
     }
 }

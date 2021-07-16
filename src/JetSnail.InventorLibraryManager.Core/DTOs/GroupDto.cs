@@ -8,18 +8,18 @@ namespace JetSnail.InventorLibraryManager.Core.DTOs
 	    ///     分组Id
 	    /// </summary>
 	    [JsonPropertyName("group_database_id")]
-	    public int? Id { get; set; }
+        public int? Id { get; set; }
 
 	    /// <summary>
 	    ///     分组名称
 	    /// </summary>
-		[JsonPropertyName("name")]
-	    public string DisplayName { get; set; }
+	    [JsonPropertyName("name")]
+        public string DisplayName { get; set; }
 
 	    /// <summary>
 	    ///     缩写
 	    /// </summary>
 	    [JsonPropertyName("code")]
-	    public string ShortName { get; set; }
+        public string ShortName { get; set; }
     }
 }
