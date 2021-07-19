@@ -3,8 +3,8 @@ using JetSnail.InventorLibraryManager.Core.DTOs;
 
 namespace JetSnail.InventorLibraryManager.UseCase.UseCases
 {
-    public interface IGetFamiliesUseCase
+    public interface IGetFamilyUseCase
     {
-        Task<FamilyDto[]> Execute(string libraryId = null);
+        Task<FamilyDto> Execute(string id);
     }
 }

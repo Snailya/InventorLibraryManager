@@ -1,7 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text.Json;
+﻿using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using AntDesign;
 using JetSnail.InventorLibraryManager.Core.DTOs;
@@ -20,24 +18,19 @@ namespace JetSnail.InventorLibraryManager.Web.Data
             _notice = notice;
         }
 
-        public async Task<FamilyDto[]> Execute()
+        public async Task<FamilyDto[]> Execute(string libraryId)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get,
-                "http://10.25.16.149:5000/api/families");
-            using var client = _clientFactory.CreateClient();
+            using var client = _clientFactory.CreateClient("inventor");
+            var response =
+                await client.GetAsync(string.IsNullOrEmpty(libraryId) ? "families" : $"families?libraryId={libraryId}");
 
-            var response = await client.SendAsync(request);
-            
-            if (response.IsSuccessStatusCode)
-            {
-                await using var responseStream = await response.Content.ReadAsStreamAsync();
-                return (await JsonSerializer.DeserializeAsync
-                    <FamilyDto[]>(responseStream))!.ToArray();
-            }
+            if (response.IsSuccessStatusCode) return await response.Content.ReadFromJsonAsync<FamilyDto[]>();
 
             await _notice.Error(new NotificationConfig
             {
                 Message = response.ReasonPhrase,
+                Description = await response.Content.ReadAsStringAsync(),
+                Duration = 0,
                 NotificationType = NotificationType.Error
             });
             return null;

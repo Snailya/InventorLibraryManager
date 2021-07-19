@@ -1,0 +1,45 @@
+@inherits FeedbackComponent<FamilyLineItemViewModel, FamilyLineItemViewModel>
+@inject IGetGroupsUseCase _getGroupsUseCase
+@inject IUpdateFamilyUseCase _updateFamilyUseCase
+
+<Select TItem="GroupOptionViewModel" TItemValue="int"
+        DataSource="@_groups"
+        @bind-Value="@_selectGroupId"
+        LabelName="@nameof(GroupOptionViewModel.Name)"
+        ValueName="@nameof(GroupOptionViewModel.Id)">
+</Select>
+
+@code {
+    private IEnumerable<GroupOptionViewModel> _groups;
+    private int _selectGroupId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _groups = (await _getGroupsUseCase.Execute()).Select(x => new GroupOptionViewModel
+        {
+            Name = x.DisplayName,
+            Id = (int)x.Id
+        }).ToList();
+    }
+
+    public override async Task OnFeedbackOkAsync(ModalClosingEventArgs args)
+    {
+        if (_selectGroupId == 0)
+        {
+            args.Cancel = true;
+        }
+
+        var family = await _updateFamilyUseCase.Execute(Options.Id, Options.Library.Id, _selectGroupId);
+        Options.Group = new GroupLineItemViewModel
+        {
+            DisplayName = family.Group.DisplayName,
+            Id = family.Group.Id,
+            ShortName = family.Group.ShortName
+        };
+
+        await OkCancelRefWithResult!.OnOk(Options);
+
+        await base.OnFeedbackOkAsync(args);
+    }
+
+}

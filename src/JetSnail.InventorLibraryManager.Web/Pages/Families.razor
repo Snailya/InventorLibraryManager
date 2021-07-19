@@ -1,51 +1,83 @@
 ﻿@page "/families"
+@using JetSnail.InventorLibraryManager.Web.Controls
 @inject IGetLibrariesUseCase _getLibrariesUseCase
 @inject IGetFamiliesUseCase _getFamiliesUseCase
+@inject IAddFamilyUseCase _addFamilyUseCase
+@inject MessageService _message
+@inject ModalService _modalService
+@inject DrawerService _drawerService
 
-<div style="height:100%; display: flex; flex-direction: column;">
-    <Row Justify="center" Align="middle" Gutter="8">
-        <GridCol Span="4">
-            <Select TItem="LibraryOptionViewModel" TItemValue="string" 
-                    DataSource="@_viewModel.Libraries"
-                    OnSelectedItemChanged="@FilterFamilies"
-                    LabelName="@nameof(LibraryOptionViewModel.Name)"
-                    ValueName="@nameof(LibraryOptionViewModel.Id)"
-                    GroupName="@nameof(LibraryOptionViewModel.ReadOnly)"
-            >
-            </Select>
-        </GridCol>
-        <GridCol Span="16">
-            @* <Search Placeholder="搜索" *@
-            @*         EnterButton="@("Search")" *@
-            @*         @bind-Value="@_viewModel.Field" *@
-            @*         OnSearch="ReloadFamiliesAsync"/> *@
-        </GridCol>
-    </Row>
-    <Row Justify="center" Style="flex-grow: 1">
-        <GridCol Span="20">
-            <Spin Size="large" Spinning="_isLoading" Style="display: flex; height: 100%; width: 100%; align-items: center; justify-content: center;">
-                <Table TItem="FamilyLineItemViewModel" DataSource="@_viewModel.FilteredFamilies">
-                    <Column @bind-Field="@context.Library" Sortable/>
-                    <Column @bind-Field="@context.Name"/>
-                    <Column @bind-Field="@context.Group" Sortable/>
-                    @* <ActionColumn Title="操作"> *@
-                    @*     <Space> *@
-                    @*         <SpaceItem> *@
-                    @*             <Button OnClick="() => ViewFamily(context.InternalName)" Disabled="@(context.Id == null)">详情</Button> *@
-                    @*         </SpaceItem> *@
-                    @*         <SpaceItem> *@
-                    @*             <Button OnClick="() => SaveFamilyTo(context.InternalName)">复制到</Button> *@
-                    @*         </SpaceItem> *@
-                    @*         <SpaceItem> *@
-                    @*             <Button OnClick="() => DeleteFamily(context)" Disabled="@(context.Id == null)" Danger>删除</Button> *@
-                    @*         </SpaceItem> *@
-                    @*     </Space> *@
-                    @* </ActionColumn> *@
-                </Table>
-            </Spin>
-        </GridCol>
-    </Row>
-</div>
+
+<Row Justify="center" Style="flex-grow: 1;height: 100%;" >
+    <GridCol Span="20">
+        <Space Direction="DirectionVHType.Vertical" Style="width: 100%;">
+            <SpaceItem>
+                <Space>
+                    <SpaceItem>
+                        <Text Style="padding-left: 8px;">库视图：</Text>
+                    </SpaceItem>
+                    <SpaceItem>
+                        <Select TItem="LibraryOptionViewModel" TItemValue="string"
+                                Style="min-width: 128px;"
+                                DataSource="@_viewModel.Libraries"
+                                OnSelectedItemChanged="@OnSelectedLibraryChanged"
+                                LabelName="@nameof(LibraryOptionViewModel.Name)"
+                                ValueName="@nameof(LibraryOptionViewModel.Id)">
+                        </Select>
+                    </SpaceItem>
+                </Space>
+            </SpaceItem>
+            <SpaceItem>
+                <Spin Size="large" Spinning="_isLoading" Style="display: flex; height: 100%; width: 100%; align-items: center; justify-content: center;">
+                    <Table TItem="FamilyLineItemViewModel" DataSource="@(_viewModel.Families)"
+                           Size="@TableSize.Small">
+                        <Column @bind-Field="@context.Library">@context.Library.Name</Column>
+                        <Column TData="string" @bind-Field="@context.Name" Filterable/>
+                        <Column @bind-Field="@context.Description" Ellipsis/>
+                        <Column @bind-Field="@context.Group">
+                            @if (!context.Library.ReadOnly)
+                            {
+                                @context.Group?.DisplayName
+                            }
+                        </Column>
+                        <ActionColumn Title="操作" Width="256">
+                            <Space>
+                                <SpaceItem>
+                                    <Button OnClick="() => ViewFamilyDetail(context)" Disabled="@(context.Library.ReadOnly)">详情</Button>
+                                </SpaceItem>
+                                <SpaceItem>
+                                    <Button OnClick="() => AssignGroup(context)" Disabled="@(context.Library.ReadOnly)">指派</Button>
+                                </SpaceItem>
+                                <SpaceItem>
+                                    <DropdownButton Trigger="@(new[] { TriggerType.Click })" Icon="down">
+                                        <Overlay>
+                                            <AntDesign.Menu>
+                                                @foreach (var library in _viewModel.Libraries)
+                                                {
+                                                    <AntDesign.MenuItem>
+                                                        <Button Type="@ButtonType.Link"
+                                                                OnClick="() => CopyOrMoveFamilyTo(context, library)"
+                                                                Disabled="@(library.ReadOnly || library == context.Library || string.IsNullOrEmpty(library.Id))">
+                                                            @library.Name
+                                                        </Button>
+                                                    </AntDesign.MenuItem>
+                                                }
+                                            </AntDesign.Menu>
+                                        </Overlay>
+                                        <Unbound Context="dropdown">
+                                            移动至
+                                        </Unbound>
+                                    </DropdownButton >
+                                </SpaceItem>
+                            </Space>
+                        </ActionColumn>
+                    </Table>
+                </Spin>
+            </SpaceItem>
+        </Space>
+    </GridCol>
+</Row>
+
 
 @code {
 
@@ -64,38 +96,80 @@
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
-
-        _viewModel.Libraries = (await _getLibrariesUseCase.Execute())
-            .Select(x => new LibraryOptionViewModel
-        {
-            Id = x.LibraryInternalName,
-            Name = x.DisplayName,
-            ReadOnly = x.ReadOnly
-        }).ToList();
-
-        _viewModel.Families = (await _getFamiliesUseCase.Execute())
-            .Select(x => new FamilyLineItemViewModel()
-            {
-                DatabaseId = x.Id,
-                Group = x.Group!=null? new GroupLineItemViewModel()
+        _viewModel.Libraries.AddRange(
+            (await _getLibrariesUseCase.Execute())
+                .Select(x => new LibraryOptionViewModel
                 {
-                    DisplayName = x.Group.DisplayName,
-                    Id = x.Group.Id,
-                    ShortName = x.Group.ShortName
-                }:null,
-                Id = x.FamilyInternalName,
-                Library = _viewModel.Libraries.Single(y=>y.Id == x.LibraryInternalName)
-            }).ToList();
-        
+                    Id = x.LibraryInternalName,
+                    Name = x.DisplayName,
+                    ReadOnly = x.ReadOnly
+                }));
+
+        await ReloadFamilies();
+
         await base.OnInitializedAsync();
     }
 
     /// <summary>
-    ///     filter families by library
+    ///     prompt a select box to let use chose  from database and update UI.
     /// </summary>
-    private  void FilterFamilies(LibraryOptionViewModel obj)
+    private async Task CopyOrMoveFamilyTo(FamilyLineItemViewModel context, LibraryOptionViewModel library)
     {
-        _viewModel.FilteredFamilies = _viewModel.Families.Where(x => x.Library == obj);
+        var family = await _addFamilyUseCase.Execute(context.Id, context.Library.Id, library.Id);
+        context.DatabaseId = family.Id;
+        context.Library = _viewModel.Libraries.Single(y => y.Id == family.LibraryInternalName);
+        StateHasChanged();
+    }
+
+    private async Task ReloadFamilies(string libraryId = "")
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        _viewModel.Families = (await _getFamiliesUseCase.Execute(libraryId)).Select(x => new FamilyLineItemViewModel
+        {
+            DatabaseId = x.Id,
+            Description = x.Description,
+            Group = x.Group != null ? new GroupLineItemViewModel
+            {
+                DisplayName = x.Group.DisplayName,
+                Id = x.Group.Id,
+                ShortName = x.Group.ShortName
+            } : null,
+            Id = x.FamilyInternalName,
+            Library = _viewModel.Libraries.Single(y => y.Id == x.LibraryInternalName),
+            Name = x.DisplayName
+        }).ToList();
+
+        _isLoading = false;
+    }
+
+    private async Task AssignGroup(FamilyLineItemViewModel context)
+    {
+        var modalRef = await _modalService.CreateModalAsync<AssignGroupSelect, FamilyLineItemViewModel, FamilyLineItemViewModel>(
+            new ModalOptions
+            {
+                Title = "指派分组",
+                MaskClosable = false
+            }, context);
+
+        modalRef.OnOk = result =>
+        {
+            StateHasChanged();
+            return Task.CompletedTask;
+        };
+    }
+
+    private async void OnSelectedLibraryChanged(LibraryOptionViewModel obj)
+    {
+        await ReloadFamilies(obj.Id);
+        StateHasChanged();
+    }
+
+    private async Task ViewFamilyDetail(FamilyLineItemViewModel context)
+    {
+        await _drawerService.CreateDialogAsync<FamilyDetailDrawer, FamilyLineItemViewModel, FamilyLineItemViewModel>(
+            new DrawerOptions { Title = "详情", Width = 800 }, context);
     }
 
 }

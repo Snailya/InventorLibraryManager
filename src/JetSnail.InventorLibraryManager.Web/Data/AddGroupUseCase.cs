@@ -1,6 +1,5 @@
 ﻿using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text.Json;
 using System.Threading.Tasks;
 using AntDesign;
 using JetSnail.InventorLibraryManager.Core.DTOs;
@@ -21,21 +20,17 @@ namespace JetSnail.InventorLibraryManager.Web.Data
 
         public async Task<GroupDto> Execute(string displayName, string shortName)
         {
+            using var client = _clientFactory.CreateClient("inventor");
+            var response = await client.PostAsJsonAsync("groups",
+                new GroupDto { DisplayName = displayName, ShortName = shortName });
 
-            using var client = _clientFactory.CreateClient();
-
-            var response = await client.PostAsJsonAsync("http://10.25.16.149:5000/api/groups",new GroupDto(){DisplayName = displayName,ShortName = shortName});
-            
-            if (response.IsSuccessStatusCode)
-            {
-                await using var responseStream = await response.Content.ReadAsStreamAsync();
-                return await JsonSerializer.DeserializeAsync
-                    <GroupDto>(responseStream);
-            }
+            if (response.IsSuccessStatusCode) return await response.Content.ReadFromJsonAsync<GroupDto>();
 
             await _notice.Error(new NotificationConfig
             {
                 Message = response.ReasonPhrase,
+                Description = await response.Content.ReadAsStringAsync(),
+                Duration = 0,
                 NotificationType = NotificationType.Error
             });
             return null;

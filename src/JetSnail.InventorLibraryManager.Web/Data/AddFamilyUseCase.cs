@@ -7,23 +7,28 @@ using JetSnail.InventorLibraryManager.UseCase.UseCases;
 
 namespace JetSnail.InventorLibraryManager.Web.Data
 {
-    public class GetGroupsUseCase : IGetGroupsUseCase
+    public class AddFamilyUseCase : IAddFamilyUseCase
     {
         private readonly IHttpClientFactory _clientFactory;
         private readonly NotificationService _notice;
 
-        public GetGroupsUseCase(IHttpClientFactory clientFactory, NotificationService notice)
+        public AddFamilyUseCase(IHttpClientFactory clientFactory, NotificationService notice)
         {
             _clientFactory = clientFactory;
             _notice = notice;
         }
 
-        public async Task<GroupDto[]> Execute()
+        public async Task<FamilyDto> Execute(string familyId, string fromLibraryId, string toLibraryId)
         {
             using var client = _clientFactory.CreateClient("inventor");
-            var response = await client.GetAsync("groups");
+            var response = await client.PostAsJsonAsync("families",
+                new CopyOrMoveFamilyDto
+                {
+                    FamilyInternalName = familyId, FromLibraryInternalName = fromLibraryId,
+                    ToLibraryInternalName = toLibraryId
+                });
 
-            if (response.IsSuccessStatusCode) return await response.Content.ReadFromJsonAsync<GroupDto[]>();
+            if (response.IsSuccessStatusCode) return await response.Content.ReadFromJsonAsync<FamilyDto>();
 
             await _notice.Error(new NotificationConfig
             {

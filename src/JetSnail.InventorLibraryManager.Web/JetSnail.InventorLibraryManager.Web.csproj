@@ -9,12 +9,11 @@
 
     <ItemGroup>
         <None Update="app.db" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
-        <None Remove="..\.dockerignore" />
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Accelist.FluentValidation.Blazor" Version="4.0.0" />
-        <PackageReference Include="AntDesign" Version="0.8.2" />
+        <PackageReference Include="AntDesign" Version="0.8.4" />
         <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="5.0.7" />
         <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="5.0.7" />
         <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="5.0.7" />
@@ -24,16 +23,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Controls" />
+        <ProjectReference Include="..\JetSnail.InventorLibraryManager.UseCase\JetSnail.InventorLibraryManager.UseCase.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\JetSnail.InventorLibraryManager.UseCase\JetSnail.InventorLibraryManager.UseCase.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <_ContentIncludedByDefault Remove="wwwroot\css\bootstrap\bootstrap.min.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\bootstrap\bootstrap.min.css.map" />
+        <_ContentIncludedByDefault Remove="wwwroot\css\bootstrap\bootstrap.min.css" />
+        <_ContentIncludedByDefault Remove="wwwroot\css\bootstrap\bootstrap.min.css.map" />
     </ItemGroup>
 
 </Project>

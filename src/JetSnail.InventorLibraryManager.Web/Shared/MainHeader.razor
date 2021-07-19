@@ -1,5 +1,4 @@
-﻿@using JetSnail.InventorLibraryManager.Web.ViewModels
-<header id="header" class="clearfix">
+﻿<header id="header" class="clearfix">
     <Row Style="flex-flow: nowrap; height: 64px;">
         <GridCol Xs="24" Sm="24" Md="6" Lg="6" Xl="5" Xxl="4">
             <h1>
@@ -11,7 +10,7 @@
 
         <GridCol Class="menu-row" Xs="0" Sm="0" Md="18" Lg="18" Xl="19" Xxl="20">
             <div id="search-box">
-                <Icon Type="search"/>
+                @* <Icon Type="search"/> *@
             </div>
             <Menu Mode="@(MenuMode.Horizontal)" Id="nav" Class="menu-site">
                 @foreach (var item in _naviItems)
@@ -75,5 +74,10 @@
 </style>
 
 @code {
-    private NaviItemViewModel[] _naviItems = { new() { Title = "资源中心", Url = "families" },new() { Title = "分组", Url = "groups" } };
+    private NaviItemViewModel[] _naviItems =
+    {
+        new() { Title = "资源中心", Url = "families" }, 
+        new() { Title = "分组", Url = "groups" } ,
+        // new(){Title = "帮助", Url="help"}
+    };
 }

@@ -19,20 +19,19 @@ namespace JetSnail.InventorLibraryManager.Web.Data
 
         public async Task<bool> Execute(int id)
         {
-            using var client = _clientFactory.CreateClient();
+            using var client = _clientFactory.CreateClient("inventor");
+            var response = await client.DeleteAsync($"groups/{id}");
 
-            var response = await client.DeleteAsync($"http://10.25.16.149:5000/api/groups/{id}");
-
-            if (response.StatusCode == HttpStatusCode.NoContent)
-            {
-                return true;
-            }
+            if (response.StatusCode == HttpStatusCode.NoContent) return true;
 
             await _notice.Error(new NotificationConfig
             {
                 Message = response.ReasonPhrase,
+                Description = await response.Content.ReadAsStringAsync(),
+                Duration = 0,
                 NotificationType = NotificationType.Error
             });
+
             return false;
         }
     }

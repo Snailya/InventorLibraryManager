@@ -3,46 +3,51 @@
 @inject IAddGroupUseCase _addGroupUseCase
 @inject IDeleteGroupUseCase _deleteGroupUseCase
 @inject MessageService _message
+@inject IValidator<GroupLineItemViewModel> _groupValidator
 
-<Form @ref="_viewModel.Form"
-      Model="@_viewModel.GroupToAdd"
-      Layout="@FormLayout.Inline"
-      OnFinish="OnValidateSubmit"
-      >
-    <Validator>
-        <FluentValidator/>
-    </Validator>
-    <ChildContent>
-        <FormItem Label="名称">
-            <Input @bind-Value="@context.DisplayName"/>
-        </FormItem>
-        <FormItem Label="缩写">
-            <Input @bind-Value="@context.ShortName"/>
-        </FormItem>
-        <FormItem>
-            <Button Type="@ButtonType.Primary" HtmlType="submit">新建</Button>
-        </FormItem>
-    </ChildContent>
-</Form>
-<Spin Spinning="_isLoading">
-    <Table TItem="GroupLineItemViewModel" DataSource="@_viewModel.Groups">
-        <Column @bind-Field="@context.DisplayName"/>
-        <Column @bind-Field="@context.ShortName"/>
-        <ActionColumn Title="操作">
-            <Space>
-                @* <SpaceItem> *@
-                @*     <Button OnClick="() => UpdateGroupPartNumbers(context)" Disabled="@(context.IsSynchronized)">更新</Button> *@
-                @* </SpaceItem> *@
-                @* <SpaceItem> *@
-                @*     <Button OnClick="() => EditGroup(context)">编辑</Button> *@
-                @* </SpaceItem> *@
-                <SpaceItem>
-                    <Button OnClick="() => DeleteGroup(context)" Danger>删除</Button>
-                </SpaceItem>
-            </Space>
-        </ActionColumn>
-    </Table>
-</Spin>
+<Row Justify="center" Style="flex-grow: 1;height: 100%;">
+    <GridCol Span="20">
+        <Space Direction="DirectionVHType.Vertical" Style="width: 100%;">
+            <SpaceItem>
+                <Form @ref="_viewModel.Form"
+                      Model="@_viewModel.GroupToAdd"
+                      Layout="@FormLayout.Inline"
+                      OnFinish="OnValidateSubmit">
+                    <Validator>
+                        <FluentValidator/>
+                    </Validator>
+                    <ChildContent>
+                        <FormItem>
+                            <Input @bind-Value="@context.DisplayName"/>
+                        </FormItem>
+                        <FormItem>
+                            <Input @bind-Value="@context.ShortName"/>
+                        </FormItem>
+                        <FormItem>
+                            <Button Loading="@_isProcessing" Type="@ButtonType.Primary" HtmlType="submit">新建</Button>
+                        </FormItem>
+                    </ChildContent>
+                </Form>
+            </SpaceItem>
+            <SpaceItem>
+                <Spin Spinning="_isLoading">
+                    <Table TItem="GroupLineItemViewModel" DataSource="@_viewModel.Groups">
+                        <Column @bind-Field="@context.DisplayName"/>
+                        <Column @bind-Field="@context.ShortName"/>
+                        <ActionColumn Title="操作">
+                            <Space>
+                                <SpaceItem>
+                                    <Button OnClick="() => DeleteGroup(context)" Danger>删除</Button>
+                                </SpaceItem>
+                            </Space>
+                        </ActionColumn>
+                    </Table>
+                </Spin>
+            </SpaceItem>
+        </Space>
+    </GridCol>
+</Row>
+
 
 @code {
 
@@ -50,6 +55,11 @@
     ///     Indicates whether the table is loading.
     /// </summary>
     private bool _isLoading;
+
+    /// <summary>
+    ///     Indicates whether the adding action is processing
+    /// </summary>
+    private bool _isProcessing;
 
     /// <summary>
     ///     ViewModel of the component.
@@ -81,13 +91,25 @@
     /// </summary>
     private async Task OnValidateSubmit(EditContext editContext)
     {
-        var vm = (GroupLineItemViewModel)editContext.Model;
-        var group = await _addGroupUseCase.Execute(vm.DisplayName, vm.ShortName);
+    // bug: MustAsync not trigger on first submit, validate manually
 
-        await _message.Success("创建成功");
-        _viewModel.Groups.Add(new GroupLineItemViewModel { Id = group.Id, DisplayName = group.DisplayName, ShortName = group.ShortName });
+        _isProcessing = true;
+        StateHasChanged();
+
+        if ((await _groupValidator.ValidateAsync((GroupLineItemViewModel)editContext.Model)).IsValid)
+        {
+            var vm = (GroupLineItemViewModel)editContext.Model;
+            var group = await _addGroupUseCase.Execute(vm.DisplayName, vm.ShortName);
+
+            if (group != null)
+            {
+                _viewModel.Groups.Add(new GroupLineItemViewModel { Id = group.Id, DisplayName = group.DisplayName, ShortName = group.ShortName });
+                await _message.Success("创建成功");
+            }
+        }
+
+        _isProcessing = false;
     }
-    
 
     /// <summary>
     ///     Delete group from database and update UI.
