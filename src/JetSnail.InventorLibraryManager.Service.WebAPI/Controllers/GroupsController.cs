@@ -91,7 +91,7 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
 
 				if (sqlException.Number == 8152)
 					return UnprocessableEntity("Length of the ShortName property must be 3.");
-				return UnprocessableEntity();
+				return UnprocessableEntity(dbUpdateException.Message);
 			}
 		}
 
@@ -120,7 +120,7 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
 
 				if (sqlException.Number == 8152)
 					return UnprocessableEntity("Length of the ShortName property must be 3.");
-				return UnprocessableEntity();
+				return UnprocessableEntity(dbUpdateException.Message);
 			}
 		}
 

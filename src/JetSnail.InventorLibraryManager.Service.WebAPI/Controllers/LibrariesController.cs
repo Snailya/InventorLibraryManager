@@ -48,7 +48,7 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
                 return e.HResult switch
                 {
                     -2147221021 => StatusCode(500, "Unable to get Inventor from ROT."), // Inventor没有启动
-                    _ => UnprocessableEntity()
+                    _ => UnprocessableEntity(e.Message)
                 };
             }
         }
