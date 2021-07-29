@@ -67,7 +67,7 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI
             app.UseDeveloperExceptionPage();
             app.UseSwagger();
             app.UseSwaggerUI(c =>
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "InventorLibraryManager WebAPI v1"));
+                c.SwaggerEndpoint("./v1/swagger.json", "InventorLibraryManager WebAPI v1"));
 
             app.UseHttpsRedirection();
 
