@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace JetSnail.InventorLibraryManager.Core.DbModels
 {
-    public class DatabaseGroup
+    public class DatabaseGroup:EntityBase
     {
         [Key] public int Id { get; set; }
 
@@ -18,8 +19,8 @@ namespace JetSnail.InventorLibraryManager.Core.DbModels
         public string ShortName { get; set; }
 
         /// <summary>
-        ///     Indicates whether need to update Inventor due to ShortName change.
+        ///     存储在数据库内的关联的零件信息
         /// </summary>
-        public bool HasSynchronized { get; set; } = false;
+        // public virtual ICollection<DatabaseFamily> Families { get; set; } = new List<DatabaseFamily>();
     }
 }

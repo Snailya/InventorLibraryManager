@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace JetSnail.InventorLibraryManager.Core.DbModels
 {
-    public class DatabaseFamily
+    public class DatabaseFamily:EntityBase
     {
         [Key] public int Id { get; set; }
 
