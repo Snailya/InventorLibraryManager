@@ -3,9 +3,7 @@ using JetSnail.InventorLibraryManager.Core.InventorModels;
 
 namespace JetSnail.InventorLibraryManager.Core.Domains
 {
-    public class Family
+    public class Family:ModelBase<InventorFamily,DatabaseFamily>
     {
-        public DatabaseFamily DatabaseModel { get; set; }
-        public InventorFamily InventorModel { get; set; }
     }
 }

@@ -21,6 +21,6 @@ namespace JetSnail.InventorLibraryManager.Core.DbModels
         /// <summary>
         ///     存储在数据库内的关联的零件信息
         /// </summary>
-        // public virtual ICollection<DatabaseFamily> Families { get; set; } = new List<DatabaseFamily>();
+        public virtual ICollection<DatabaseFamily> Families { get; set; } = new List<DatabaseFamily>();
     }
 }

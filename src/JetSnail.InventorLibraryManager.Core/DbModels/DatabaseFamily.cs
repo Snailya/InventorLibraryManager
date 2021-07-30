@@ -13,6 +13,16 @@ namespace JetSnail.InventorLibraryManager.Core.DbModels
         public string InternalName { get; set; }
 
         /// <summary>
+        /// Origin Library (Read-only) Family Belongs
+        /// </summary>
+        public DatabaseLibrary OriginLibrary { get; set; }
+
+        /// <summary>
+        ///  关联的库
+        /// </summary>
+        public virtual ICollection<DatabaseLibrary> LinkedLibraries { get; set; }
+
+        /// <summary>
         ///     所属的类别，用于确定PartNumber的前缀。与Inventor Category无关
         /// </summary>
         public virtual DatabaseGroup Group { get; set; }
