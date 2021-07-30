@@ -74,7 +74,7 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
 				{
 					DatabaseModel = new DatabaseGroup
 					{
-						DisplayName = dto.DisplayName, HasSynchronized = true, Id = dto.Id ?? default(int),
+						DisplayName = dto.DisplayName,  Id = dto.Id ?? default(int),
 						ShortName = dto.ShortName
 					}
 				});
@@ -104,15 +104,13 @@ namespace JetSnail.InventorLibraryManager.Service.WebAPI.Controllers
 		{
 			try
 			{
-				await _groupRepository.UpdateAsync(new Group
+				if (dto.Id is { } id)
 				{
-					DatabaseModel = new DatabaseGroup
-					{
-						DisplayName = dto.DisplayName, HasSynchronized = true, Id = dto.Id ?? default(int),
-						ShortName = dto.ShortName
-					}
-				});
-				return await GetGroupByIdAsync(dto.Id ?? default(int));
+					await _groupRepository.UpdateAsync(id, dto.DisplayName, dto.ShortName);
+					return await GetGroupByIdAsync(id);
+				}
+
+				return NotFound();
 			}
 			catch (DbUpdateException dbUpdateException)
 			{

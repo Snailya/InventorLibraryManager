@@ -91,6 +91,7 @@ namespace JetSnail.InventorLibraryManager.Service.Services
             family = await GetByIdAsync(id, toLibraryId);
             if (family.DatabaseModel != null) return family;
 
+            // record into database, pay attention that the CreatedAt property is auto set when create the instance
             family.DatabaseModel = new DatabaseFamily
             {
                 InternalName = id
@@ -128,7 +129,7 @@ namespace JetSnail.InventorLibraryManager.Service.Services
                     inventorRow.Cells.Add(new InventorCell { ColumnId = "AE_PARTNUMBER" });
             }
 
-            // loop to persist part into database
+            // loop to persist part into database, pay attention that the CreatedAt property is auto generated
             foreach (var part in from inventorRow in xmlFamilyTable.Rows.Rows
                 let part = obj.DatabaseModel.Parts.SingleOrDefault(x => x.InternalName == inventorRow.InternalName)
                 where part == null
@@ -188,7 +189,7 @@ namespace JetSnail.InventorLibraryManager.Service.Services
             var part = obj.DatabaseModel.Parts.SingleOrDefault(x => x.InternalName == xmlRow.InternalName);
             if (part == null)
             {
-                part = new DatabasePart { InternalName = partId };
+                part = new DatabasePart { InternalName = partId };  // create new part
                 obj.DatabaseModel.Parts.Add(part);
             }
 

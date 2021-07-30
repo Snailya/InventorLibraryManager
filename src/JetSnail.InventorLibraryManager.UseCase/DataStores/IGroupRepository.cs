@@ -12,7 +12,7 @@ namespace JetSnail.InventorLibraryManager.UseCase.DataStores
 
         Task<Group> InsertAsync(Group obj);
 
-        Task UpdateAsync(Group obj);
+        Task UpdateAsync(int id, string displayName, string shortName);
 
         Task DeleteAsync(int id);
     }

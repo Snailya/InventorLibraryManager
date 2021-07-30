@@ -39,9 +39,12 @@ namespace JetSnail.InventorLibraryManager.Service.Services
             return obj;
         }
 
-        public async Task UpdateAsync(Group obj)
+        public async Task UpdateAsync(int id, string displayName, string shortName)
         {
-            _context.Groups.Update(obj.DatabaseModel);
+	        var group =  await _context.Groups.FindAsync(id);
+	        group.DisplayName = displayName;
+	        group.ShortName = shortName;
+            _context.Groups.Update(group);
             await _context.SaveChangesAsync();
         }
 
