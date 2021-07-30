@@ -1,0 +1,74 @@
+﻿@inherits FeedbackComponent<GroupLineItemViewModel, GroupLineItemViewModel>
+@inject IUpdateGroupUseCase _updateGroupUseCase
+@inject IValidator<GroupLineItemViewModel> _groupValidator
+
+<Form
+	  @ref="_form"
+	  Model="@_viewModel"
+	  >
+	  <Validator>
+		<FluentValidator />
+	</Validator>
+	<ChildContent>
+		<FormItem>
+			<Input @bind-Value="@context.DisplayName" />
+		</FormItem>
+		<FormItem>
+			<Input @bind-Value="@context.ShortName" />
+		</FormItem>
+	</ChildContent>
+</Form>
+
+@code {
+
+	/// <summary>
+	///     Indicates whether the adding action is processing
+	/// </summary>
+	private bool _isProcessing;
+
+	AntDesign.Form<GroupLineItemViewModel> _form;
+
+	private GroupLineItemViewModel _viewModel;
+
+	protected override async Task OnInitializedAsync()
+	{
+		_viewModel = Options;
+		await base.OnInitializedAsync();
+	}
+
+	public override async Task OnFeedbackOkAsync(ModalClosingEventArgs args)
+	{
+		_form.Validate();
+		if (FeedbackRef is ModalRef modalRef)
+		{
+			modalRef.Config.ConfirmLoading = true;
+			await modalRef.UpdateConfigAsync();
+
+			if ((await _groupValidator.ValidateAsync(_viewModel)).IsValid)
+			{
+				if (_viewModel.Id is int groupId)
+				{
+					var group = await _updateGroupUseCase.Execute(groupId, _viewModel.DisplayName, _viewModel.ShortName);
+
+					if (group != null)
+					{
+						// update families's partnumber
+
+
+
+
+						await OkCancelRefWithResult!.OnOk(new GroupLineItemViewModel { Id = group.Id, DisplayName = group.DisplayName, ShortName = group.ShortName });
+						await base.OnFeedbackOkAsync(args);
+					}
+				}
+			}
+			else
+			{
+				args.Cancel = true;
+			}
+
+			modalRef.Config.ConfirmLoading = false;
+			await modalRef.UpdateConfigAsync();
+		}
+	}
+}

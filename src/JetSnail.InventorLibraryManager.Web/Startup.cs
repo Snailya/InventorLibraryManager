@@ -50,6 +50,7 @@ namespace JetSnail.InventorLibraryManager.Web
 
 			services.AddScoped<IGetGroupsUseCase, GetGroupsUseCase>();
 			services.AddScoped<IAddGroupUseCase, AddGroupUseCase>();
+			services.AddScoped<IUpdateGroupUseCase, UpdateGroupUseCase>();
 			services.AddScoped<IDeleteGroupUseCase, DeleteGroupUseCase>();
 
 			services.AddScoped<IGetFamiliesUseCase, GetFamiliesUseCase>();
