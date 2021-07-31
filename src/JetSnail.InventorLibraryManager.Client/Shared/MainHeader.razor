@@ -1,0 +1,85 @@
+﻿<header id="header" class="clearfix">
+    <Row Style="flex-flow: nowrap; height: 64px;">
+        <GridCol Xs="24" Sm="24" Md="6" Lg="6" Xl="5" Xxl="4">
+            <h1>
+                <a id="logo" href="/">
+                    Inventor资源中心
+                </a>
+            </h1>
+        </GridCol>
+
+        <GridCol Class="menu-row" Xs="0" Sm="0" Md="18" Lg="18" Xl="19" Xxl="20">
+            <div id="search-box">
+                @* <Icon Type="search"/> *@
+            </div>
+            <Menu Mode="@(MenuMode.Horizontal)" Id="nav" Class="menu-site">
+                @foreach (var item in _naviItems)
+                {
+                    <AntDesign.MenuItem Class="ant-menu-item-only-child" Key="@item.Url" RouterLink="@(item.Url)" RouterMatch="NavLinkMatch.Prefix">
+                        <span>@item.Title</span>
+                    </AntDesign.MenuItem>
+                }
+            </Menu>
+        </GridCol>
+    </Row>
+</header>
+
+<style>
+    #header {
+        display: block;
+    }
+    
+    #logo {
+        height: 64px;
+        padding-left: 40px;
+        overflow: hidden;
+        color: rgba(0,0,0,.85);
+        font-size: 18px;
+        font-family: Avenir,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif;
+        line-height: 64px;
+        white-space: nowrap;
+        text-decoration: none;
+    }
+    
+    #header .menu-row {
+        display: flex!important;
+        align-items: center;
+        margin: 0;
+    }
+    
+    #header .menu-row>:last-child {
+        margin-right: 40px;
+    }
+    
+    #search-box {
+        position: relative;
+        display: flex;
+        flex: auto!important;
+        align-items: center;
+        height: 22px;
+        margin: 0 auto 0 0!important;
+        padding-left: 16px;
+        line-height: 22px;
+        white-space: nowrap;
+        border-left: 1px solid #f0f0f0;
+        transition: width .5s;
+    }
+    
+    #nav {
+        height: 100%;
+        font-size: 14px;
+        font-family: Avenir,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif;
+        border: 0;
+    }
+</style>
+
+@code {
+
+    private NaviItemViewModel[] _naviItems =
+    {
+        new() {Title = "资源中心", Url = "families"},
+        new() {Title = "分组", Url = "groups"},
+        new() {Title = "仪表盘", Url = "dashboard"}
+    };
+
+}

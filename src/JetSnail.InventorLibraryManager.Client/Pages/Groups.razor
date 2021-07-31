@@ -1,0 +1,57 @@
+﻿@page "/groups"
+@inject ModalService _modal
+@inject MessageService _message
+@inject IMapper _mapper
+@inject GroupPageViewModel _viewModel
+
+<Row Justify="center" Style="flex-grow: 1;height: 100%;">
+    <GridCol Span="20">
+        <Space Direction="DirectionVHType.Vertical" Style="width: 100%;">
+            <SpaceItem>
+                <Button OnClick="OnAddGroup">新建</Button>
+            </SpaceItem>
+            <SpaceItem>
+                <Spin Spinning="_isLoading">
+                    <Table TItem="GroupLineItemViewModel" DataSource="@_viewModel.Groups"
+                           RowExpandable="@(row => row.Data.Prototypes is {Count:>0})">
+                        <RowTemplate>
+                            <Column @bind-Field="@context.Name" Filterable/>
+                            <Column @bind-Field="@context.ShortName" Filterable/>
+                            <ActionColumn Title="操作">
+                                <Space>
+                                    <SpaceItem>
+                                        <Button OnClick="() => OnEditGroup(context)">编辑</Button>
+                                    </SpaceItem>
+                                    <SpaceItem>
+                                        <Button OnClick="() => OnDeleteGroup(context)" Danger>删除</Button>
+                                    </SpaceItem>
+                                </Space>
+                            </ActionColumn>
+                        </RowTemplate>
+                        <ExpandTemplate>
+                            <AntList Bordered DataSource="@context.Data.Prototypes">
+                                <ChildContent Context="item">
+                                    <ListItem >
+                                        <ListItemMeta>
+                                            <DescriptionTemplate>
+                                                <Space>
+                                                    <SpaceItem>
+                                                        @item.Description
+                                                    </SpaceItem>
+                                                </Space>
+                                            </DescriptionTemplate>
+                                            <TitleTemplate>
+                                                @item.Name
+                                            </TitleTemplate>
+                                        </ListItemMeta>
+                                    </ListItem>
+                                </ChildContent>
+                            </AntList>
+
+                        </ExpandTemplate>
+                    </Table>
+                </Spin>
+            </SpaceItem>
+        </Space>
+    </GridCol>
+</Row>

@@ -1,0 +1,19 @@
+@inherits FeedbackComponent<ProgressDrawerViewModel, ProgressDrawerViewModel>
+
+<Space Direction="DirectionVHType.Vertical" Style="width: 100%;">
+    <SpaceItem>
+        <Progress Percent="@_viewModel.Percent"></Progress>
+    </SpaceItem>
+    <SpaceItem>
+        <div style="height:100px;overflow: auto">
+            <ul>
+                @foreach (var log in _viewModel.Logs)
+                {
+                    <li>
+                        @log
+                    </li>
+                }
+            </ul>
+        </div>
+    </SpaceItem>
+</Space>

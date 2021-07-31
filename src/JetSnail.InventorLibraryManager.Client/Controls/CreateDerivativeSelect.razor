@@ -1,0 +1,9 @@
+@inherits FeedbackComponent<LibrarySelectOptionViewModel[], string>
+
+<Select TItem="LibrarySelectOptionViewModel" TItemValue="string"
+        DataSource="@_viewModel.Options"
+        @bind-Value="@_viewModel.SelectedValue"
+        LabelName="@nameof(LibrarySelectOptionViewModel.Name)"
+        ValueName="@nameof(LibrarySelectOptionViewModel.LibraryId)"
+        DisabledName="@nameof(LibrarySelectOptionViewModel.IsDisabled)">
+</Select>

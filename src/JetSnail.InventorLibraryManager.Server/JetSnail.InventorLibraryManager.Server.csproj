@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <AssemblyName>JetSnail.InventorLibraryManager.Server</AssemblyName>
+        <RootNamespace>JetSnail.InventorLibraryManager.Server</RootNamespace>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <DocumentationFile></DocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="7.1.0" />
+        <PackageReference Include="AutoMapper.Contrib.Autofac.DependencyInjection" Version="5.4.0" />
+        <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.1" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.9" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.8">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.5" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\JetSnail.InventorLibraryManager.Core\JetSnail.InventorLibraryManager.Core.csproj" />
+        <ProjectReference Include="..\JetSnail.InventorLibraryManager.Data\JetSnail.InventorLibraryManager.Data.csproj" />
+        <ProjectReference Include="..\JetSnail.InventorLibraryManager.UseCase\JetSnail.InventorLibraryManager.UseCase.csproj" />
+        <ProjectReference Include="..\Plugins\JetSnail.InventorLibraryManager.DataStore.EFCore\JetSnail.InventorLibraryManager.DataStore.EFCore.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="JetSnail.InventorLibraryManager.Service.WebAPI.xml">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+</Project>

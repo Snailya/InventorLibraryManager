@@ -1,0 +1,8 @@
+@inherits FeedbackComponent<GroupSelectOptionViewModel[], int>
+
+<Select TItem="GroupSelectOptionViewModel" TItemValue="int"
+        DataSource="@_viewModel.Options"
+        @bind-Value="@_viewModel.SelectedValue"
+        LabelName="@nameof(GroupSelectOptionViewModel.Name)"
+        ValueName="@nameof(GroupSelectOptionViewModel.Id)">
+</Select>

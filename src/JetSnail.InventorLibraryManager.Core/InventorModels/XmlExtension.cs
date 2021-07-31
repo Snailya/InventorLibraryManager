@@ -7,9 +7,12 @@ namespace JetSnail.InventorLibraryManager.Core.InventorModels
     {
         public static T ToObject<T>(this string xmlString) where T : class
         {
+            if (string.IsNullOrEmpty(xmlString))
+                return null;
+
             var serial = new XmlSerializer(typeof(T));
             using var reader = new StringReader(xmlString);
-            return (T)serial.Deserialize(reader);
+            return (T) serial.Deserialize(reader);
         }
 
         public static string ToXmlString<T>(this T obj) where T : class

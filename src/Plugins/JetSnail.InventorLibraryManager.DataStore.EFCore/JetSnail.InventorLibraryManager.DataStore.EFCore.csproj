@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <AssemblyName>JetSnail.InventorLibraryManager.DataStore.EFCore</AssemblyName>
+        <RootNamespace>JetSnail.InventorLibraryManager.DataStore.EFCore</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\JetSnail.InventorLibraryManager.Data\JetSnail.InventorLibraryManager.Data.csproj"/>
+        <ProjectReference Include="..\..\JetSnail.InventorLibraryManager.UseCase\JetSnail.InventorLibraryManager.UseCase.csproj"/>
+    </ItemGroup>
+
+</Project>

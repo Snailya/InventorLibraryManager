@@ -1,0 +1,72 @@
+﻿@page "/families"
+
+@inject IMapper _mapper
+@inject MessageService _message
+@inject ModalService _modal
+@inject DrawerService _drawer
+@inject PrototypePageViewModel _viewModel
+
+<Row Justify="center" Style="flex-grow: 1;height: 100%;">
+    <GridCol Span="20">
+        <Space Direction="DirectionVHType.Vertical" Style="width: 100%;">
+            <SpaceItem>
+                <Spin Size="large" Spinning="_isLoading" Style="display: flex; height: 100%; width: 100%; align-items: center; justify-content: center;">
+                    <Table TItem="PrototypeLineItemViewModel" DataSource="@(_viewModel.Prototypes)"
+                           Size="@TableSize.Small"
+                           RowExpandable="@(data => data.Data.Derivatives is {Count: > 0})">
+                        <ChildContent>
+                            <Column TData="string" @bind-Field="@context.Name" Filterable/>
+                            <Column @bind-Field="@context.Description" Ellipsis/>
+                            <Column @bind-Field="@context.LibraryName" Filterable/>
+                            <Column @bind-Field="@context.GroupName"/>
+                            <Column @bind-Field="@context.GroupModifiedAt"/>
+                            <ActionColumn Title="操作" Width="256">
+                                <Space>
+                                    <SpaceItem>
+                                        <Button OnClick="() => OnAssignGroup(context)">指派</Button>
+                                    </SpaceItem>
+                                    <SpaceItem>
+                                        <Button OnClick="() => OnCreateDerivative(context)">复制</Button>
+                                    </SpaceItem>
+                                </Space>
+                            </ActionColumn>
+                        </ChildContent>
+                        <ExpandTemplate>
+                            <AntList Bordered DataSource="@context.Data.Derivatives">
+                                <ChildContent Context="item">
+                                    <ListItem Actions="@(new[] {ListItemAction(async () => await OnSaveDerivative(context.Data, item), "记录", item.CreatedAt != null), ListItemAction(async () => await OnUpdateDerivative(context.Data, item), "同步", false), ListItemAction(async () => await OnDeleteDerivative(context.Data, item), "删除", false)})">
+                                        <ListItemMeta>
+                                            <DescriptionTemplate>
+                                                <Space>
+                                                    <SpaceItem>
+                                                        @item.Description
+                                                    </SpaceItem>
+                                                    <SpaceItem>
+                                                        @item.LibraryName
+                                                    </SpaceItem>
+                                                </Space>
+                                            </DescriptionTemplate>
+                                            <TitleTemplate>
+                                                @item.Name
+                                            </TitleTemplate>
+                                        </ListItemMeta>
+                                        @if (item.SynchronizedAt > context.Data.GroupModifiedAt)
+                                        {
+                                            <span>上次同步于：@item.SynchronizedAt</span>
+                                        }
+                                    </ListItem>
+                                </ChildContent>
+                            </AntList>
+                        </ExpandTemplate>
+                    </Table>
+                </Spin>
+            </SpaceItem>
+        </Space>
+    </GridCol>
+</Row>
+
+@code{
+
+    RenderFragment ListItemAction(Func<Task> onclick, string label, bool disabled) => @<Button Type="@ButtonType.Link" OnClick="@onclick" Disabled="@disabled">@label</Button>;
+
+}

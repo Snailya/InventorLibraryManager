@@ -1,0 +1,13 @@
+{
+  "solution": {
+    "path": "JetSnail.InventorLibraryManager.Full.sln",
+    "projects": [
+      "src\\JetSnail.InventorLibraryManager.Core\\JetSnail.InventorLibraryManager.Core.csproj",
+      "src\\JetSnail.InventorLibraryManager.Data\\JetSnail.InventorLibraryManager.Data.csproj",
+      "src\\JetSnail.InventorLibraryManager.Server\\JetSnail.InventorLibraryManager.Server.csproj",
+      "src\\JetSnail.InventorLibraryManager.UseCase\\JetSnail.InventorLibraryManager.UseCase.csproj",
+      "src\\Plugins\\JetSnail.InventorLibraryManager.DataStore.EFCore\\JetSnail.InventorLibraryManager.DataStore.EFCore.csproj",
+      "src\\Plugins\\JetSnail.InventorLibraryManager.Software.Inventor\\JetSnail.InventorLibraryManager.Software.Inventor.csproj"
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "solution": {
+    "path": "JetSnail.InventorLibraryManager.Full.sln",
+    "projects": [
+      "src\\JetSnail.InventorLibraryManager.Client\\JetSnail.InventorLibraryManager.Client.csproj",
+      "src\\JetSnail.InventorLibraryManager.Data\\JetSnail.InventorLibraryManager.Data.csproj",
+      "src\\JetSnail.InventorLibraryManager.UseCase\\JetSnail.InventorLibraryManager.UseCase.csproj"
+    ]
+  }
+}

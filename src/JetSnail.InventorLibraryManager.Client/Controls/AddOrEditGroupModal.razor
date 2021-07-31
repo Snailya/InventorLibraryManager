@@ -1,0 +1,20 @@
+﻿@inherits FeedbackComponent<AddOrEditGroupShortNameModalViewModel, AddOrEditGroupShortNameModalViewModel>
+@inject IMapper _mapper
+
+<Form
+    @ref="_form"
+    Model="@_viewModel"
+    ValidateMode="@FormValidateMode.Complex"
+    ValidateOnChange="@true">
+    <Validator>
+        <GroupValidator CurrentShortName="@Options.ShortName"/>
+    </Validator>
+    <ChildContent>
+        <FormItem Rules="@(new[] {new FormValidationRule {Required = true}})">
+            <Input @bind-Value="@context.Name"/>
+        </FormItem>
+        <FormItem Rules="@(new[] {new FormValidationRule {Required = true}})">
+            <Input @bind-Value="@context.ShortName"/>
+        </FormItem>
+    </ChildContent>
+</Form>
