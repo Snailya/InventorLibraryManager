@@ -32,7 +32,8 @@
                             </ActionColumn>
                         </ChildContent>
                         <ExpandTemplate>
-                            <AntList Bordered DataSource="@context.Data.Derivatives">
+                            <AntList Bordered DataSource="@context.Data.Derivatives"
+                                     Size="small">
                                 <ChildContent Context="item">
                                     <ListItem Actions="@(new[] {ListItemAction(async () => await OnSaveDerivative(context.Data, item), "记录", item.CreatedAt != null), ListItemAction(async () => await OnUpdateDerivative(context.Data, item), "同步", false), ListItemAction(async () => await OnDeleteDerivative(context.Data, item), "删除", false)})">
                                         <ListItemMeta>
